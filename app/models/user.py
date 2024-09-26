@@ -28,4 +28,4 @@ class UserModel(CoreModel):
     phone: Mapped[str | None] = mapped_column(unique=True, comment="phone")
     hashed_password: Mapped[str] = mapped_column(comment="password")
 
-    last_login: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True))
+    last_activity: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True))
