@@ -1,0 +1,15 @@
+version: "3.9"
+
+volumes:
+  postgres-data:
+
+services:
+  translator-postgres:
+    container_name: translator-postgres
+    image: postgres:15
+    env_file: .env
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: on-failure
+    ports:
+      - "5452:5432"
