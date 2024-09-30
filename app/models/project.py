@@ -8,7 +8,7 @@ from app.config.db.postgres.schema import Schemas
 from app.models.core_model import CoreModel
 
 if TYPE_CHECKING:
-    from app.models import UserModel
+    from app.models import UserModel, FileModel
 
 
 class ProjectModel(CoreModel):
@@ -38,3 +38,5 @@ class ProjectModel(CoreModel):
     # relations
 
     user: Mapped["UserModel"] = relationship(back_populates="projects")
+
+    files: Mapped[list["FileModel"]] = relationship(back_populates="project")

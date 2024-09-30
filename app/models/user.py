@@ -8,9 +8,7 @@ from app.config.db.postgres.schema import Schemas
 from app.models.core_model import CoreModel
 
 if TYPE_CHECKING:
-    from app.models.settings import SettingsModel
-    from app.models.role import RoleModel
-    from app.models.project import ProjectModel
+    from app.models import SettingsModel, RoleModel, ProjectModel
 
 
 class UserModel(CoreModel):
