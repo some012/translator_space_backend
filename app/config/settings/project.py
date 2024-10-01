@@ -12,6 +12,8 @@ class ProjectSettings(BaseSettings):
         extra="allow"
     )
 
+    API_V1_STR: str = "/api/v1"
+
     # PostgresSQL Configuration
     POSTGRES_HOST: str = Field("0.0.0.0")
     POSTGRES_PORT: int = Field(5432)

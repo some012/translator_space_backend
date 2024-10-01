@@ -1,11 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config.db.session import DBSessionManager
+from app.config.db import async_session
 
 
 async def get_db() -> AsyncSession:
-    session_manager = DBSessionManager()
-    db = session_manager.get_psql()
+    db = async_session
     try:
         yield db
     finally:
