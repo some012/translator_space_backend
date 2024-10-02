@@ -1,7 +1,4 @@
-from datetime import datetime
-from uuid import UUID
-
-from app.schemas.core_schema import CoreSchema
+from app.schemas.core_schema import CoreSchema, CoreSchemaInDB
 
 
 class RoleBase(CoreSchema):
@@ -16,12 +13,5 @@ class RoleUpdate(RoleCreate):
     pass
 
 
-class RoleInDBBase(RoleBase):
-    sid: UUID
-
-    created: datetime
-    updated: datetime
-
-
-class Role(RoleInDBBase):
+class Role(RoleBase, CoreSchemaInDB):
     pass
