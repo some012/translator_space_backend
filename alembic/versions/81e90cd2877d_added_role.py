@@ -30,7 +30,7 @@ def upgrade() -> None:
                     )
     op.create_index(op.f('ix_security_role_name'), 'role', ['name'], unique=True, schema='security')
     op.add_column('user', sa.Column('role_sid', sa.Uuid(), nullable=False), schema='users')
-    op.add_column('user', sa.Column('img', sa.String(), nullable=False), schema='users')
+    op.add_column('user', sa.Column('img', sa.String(), nullable=True), schema='users')
     op.create_foreign_key(None, 'user', 'role', ['role_sid'], ['sid'], source_schema='users',
                           referent_schema='security', ondelete='RESTRICT')
     # ### end Alembic commands ###
