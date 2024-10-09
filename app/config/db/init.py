@@ -21,8 +21,6 @@ async def init_db(db: AsyncSession) -> None:
             role_in = RoleCreate(name=name)
             await role_service.create_role(role=role_in)
 
-    print("role is created")
-
     superuser = await user_service.get_user_by_email(email=project_settings.SUPERUSER_LOGIN)
 
     if not superuser:
@@ -39,6 +37,4 @@ async def init_db(db: AsyncSession) -> None:
 
         await settings_service.create_settings(settings=settings_in)
 
-        print("settings is created")
-
-    print("superuser is created")
+    # TODO: Добавить логи
