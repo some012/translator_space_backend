@@ -6,21 +6,21 @@ from fastapi.security import OAuth2PasswordRequestForm
 from starlette import status
 
 from app.config.auth.current_user import get_current_user
-from app.config.auth.token_helper import token_helper
 from app.config.auth.token_schema import Token
 from app.config.settings.project import project_settings
 from app.enums.role import RoleTypes
 from app.schemas.user import UserCreate, UserRole
 from app.services.user_service import UserService
 from app.utils.custom_options.user_options import UserCustomOptions
+from app.utils.helpers.token_helper import token_helper
 
 router = APIRouter()
 
 
 @router.post(path="/register")
 async def create_user(
-    user_in: UserCreate,
-    user_service: UserService.register_deps(),
+        user_in: UserCreate,
+        user_service: UserService.register_deps(),
 ) -> UserRole:
     await user_service.create_user(user_in=user_in, user_role=RoleTypes.USER)
 
@@ -33,8 +33,8 @@ async def create_user(
 
 @router.post("/login")
 async def login(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    user_service: UserService.register_deps(),
+        form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+        user_service: UserService.register_deps(),
 ) -> Token:
     user = await user_service.authenticate_user(
         email=form_data.username, password=form_data.password
@@ -56,6 +56,6 @@ async def login(
 
 @router.get("/users/me/")
 async def get_me(
-    current_user: Annotated[UserRole, Depends(get_current_user)],
+        current_user: Annotated[UserRole, Depends(get_current_user)],
 ) -> UserRole:
     return current_user
