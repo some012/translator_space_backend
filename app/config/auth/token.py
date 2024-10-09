@@ -5,8 +5,8 @@ from jwt import PyJWTError
 from starlette import status
 
 from app.config.auth.oauth2 import oauth2_scheme
-from app.config.auth.token_helper import token_helper
 from app.config.auth.token_schema import TokenData
+from app.utils.helpers.token_helper import token_helper
 
 
 def validate_access_token(token: Annotated[str, Depends(oauth2_scheme)]) -> TokenData:
