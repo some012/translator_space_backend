@@ -7,10 +7,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
 
-from app.config.auth.password_helper import password_helper
 from app.models import UserModel
 from app.schemas.user import UserCreate, UserUpdate
 from app.services.repositories.crud import CrudRepository
+from app.utils.helpers.password_helper import password_helper
 
 
 class UserRepository(CrudRepository[UserModel, UserCreate, UserUpdate]):

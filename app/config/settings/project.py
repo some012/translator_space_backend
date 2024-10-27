@@ -43,5 +43,12 @@ class ProjectSettings(BaseSettings):
     ALGORITHM: str = Field("HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
+    # superuser
+    SUPERUSER_NAME: str = Field("name")
+    SUPERUSER_MIDDLE_NAME: str = Field("middle_name")
+    SUPERUSER_LAST_NAME: str = Field("last_name")
+    SUPERUSER_LOGIN: str = Field("superuser@gmail.com")
+    SUPERUSER_PASSWORD: str = Field("123123")
+
 
 project_settings: ProjectSettings = ProjectSettings()

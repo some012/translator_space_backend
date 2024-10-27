@@ -28,6 +28,9 @@ class RoleService:
     async def get_one_role(self, role_sid: UUID) -> RoleModel | None:
         return await self._role_repository.get_one(sid=role_sid)
 
+    async def get_by_name(self, name: str) -> RoleModel | None:
+        return await self._role_repository.get_by_name(name=name)
+
     async def get_all_roles(self) -> Sequence[RoleModel]:
         return await self._role_repository.get_all()
 
