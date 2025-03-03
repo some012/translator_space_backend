@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config.logger import logger
 from app.config.settings.project import project_settings
 from app.enums.role import RoleTypes
 from app.schemas.role import RoleCreate
@@ -20,8 +21,13 @@ async def init_db(db: AsyncSession) -> None:
         if not role:
             role_in = RoleCreate(name=name)
             await role_service.create_role(role=role_in)
+            logger.info(f"Role {name} is created")
+        else:
+            logger.info(f"Role {name} already exists")
 
-    superuser = await user_service.get_user_by_email(email=project_settings.SUPERUSER_LOGIN)
+    superuser = await user_service.get_user_by_email(
+        email=project_settings.SUPERUSER_LOGIN
+    )
 
     if not superuser:
         superuser_in = UserCreate(
@@ -31,10 +37,14 @@ async def init_db(db: AsyncSession) -> None:
             password=project_settings.SUPERUSER_PASSWORD,
             email=project_settings.SUPERUSER_LOGIN,
         )
-        superuser = await user_service.create_user(user_in=superuser_in, user_role=RoleTypes.SUPERUSER)
+        superuser = await user_service.create_user(
+            user_in=superuser_in, user_role=RoleTypes.SUPERUSER
+        )
+        logger.info(f"Superuser created")
 
         settings_in = SettingsCreate(user_sid=superuser.sid, activity=True)
 
         await settings_service.create_settings(settings=settings_in)
-
-    # TODO: Добавить логи
+        logger.info(f"Settings created")
+    else:
+        logger.info(f"Superuser already exists")
