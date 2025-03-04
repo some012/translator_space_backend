@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from app.schemas.core_schema import CoreSchema, CoreSchemaInDB
+from app.schemas.line import Line
 
 
 class FileBase(CoreSchema):
@@ -18,3 +19,7 @@ class FileUpdate(FileCreate):
 
 class File(FileBase, CoreSchemaInDB):
     pass
+
+
+class FileLines(File):
+    lines: list[Line]
