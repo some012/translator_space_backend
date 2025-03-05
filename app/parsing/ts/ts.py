@@ -1,13 +1,14 @@
-from asyncio import run
-
 from bs4 import BeautifulSoup
+from starlette.datastructures import UploadFile
 
 
 class TSFormatParser:
 
-    async def from_ts_to_json(self, fp):
+    async def from_ts_to_json(self, file: UploadFile) -> dict:
         final_json = {}
-        soup = BeautifulSoup(fp, "xml")
+
+        file_content = await file.read()
+        soup = BeautifulSoup(file_content, "xml")
 
         ts = soup.find("TS")
         final_json["language"] = ts["language"]
@@ -38,10 +39,10 @@ class TSFormatParser:
 
         final_json["contexts"] = final_dict
 
+        return final_json
+
     def from_json_to_ts(self, json):
         pass
 
 
 ts_format_parser = TSFormatParser()
-with open("example.ts") as fp:
-    run(ts_format_parser.from_ts_to_json(fp))

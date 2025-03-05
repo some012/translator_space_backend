@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import UUID
 
 from app.schemas.core_schema import CoreSchema, CoreSchemaInDB
@@ -8,6 +9,9 @@ class LineBase(CoreSchema):
     meaning: str
     translation: str
     translated: bool
+    group: str
+    filename: Optional[str] = None
+    line: Optional[int] = None
 
 
 class LineCreate(LineBase):

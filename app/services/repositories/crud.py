@@ -58,6 +58,29 @@ class CrudRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
                 detail=f"Duplicate entry detected. Ensure unique values for required fields.",
             ) from e
 
+    async def create_all(
+        self, c_objects: Sequence[CreateSchemaType]
+    ) -> Sequence[CreateSchemaType]:
+        try:
+            c_objects_db = []
+
+            for c_obj in c_objects:
+                db_obj = self.model(**c_obj.model_dump())
+                c_objects_db.append(db_obj)
+
+            self.db.add_all(c_objects_db)
+            await self.db.commit()
+
+            for c_obj in c_objects_db:
+                await self.db.refresh(c_obj)
+
+            return c_objects
+        except IntegrityError as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Duplicate entry detected. Ensure unique values for required fields.",
+            ) from e
+
     async def update(self, db_obj: ModelType, u_obj: UpdateSchemaType) -> ModelType:
         try:
             obj = jsonable_encoder(db_obj)

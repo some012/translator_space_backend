@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, VARCHAR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.config.db.postgres.schema import Schemas
@@ -25,11 +25,13 @@ class FileModel(CoreModel):
         unique=True,
     )
 
+    name: Mapped[str] = mapped_column(VARCHAR(length=225), index=True, unique=True)
+
     project_sid: Mapped[UUID] = mapped_column(
         ForeignKey("projects.project.sid", ondelete="CASCADE"), primary_key=True
     )
 
-    path: Mapped[str] = mapped_column()
+    path: Mapped[str] = mapped_column(VARCHAR(length=225), nullable=True)
 
     # relations
 
