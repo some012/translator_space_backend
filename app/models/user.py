@@ -37,7 +37,7 @@ class UserModel(CoreModel):
         ForeignKey("security.role.sid", ondelete="RESTRICT"), primary_key=True
     )
 
-    img: Mapped[str] = mapped_column()
+    img: Mapped[str] = mapped_column(nullable=True)
 
     last_activity: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True))
 

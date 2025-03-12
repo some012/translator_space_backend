@@ -29,9 +29,7 @@ class ProjectModel(CoreModel):
         ForeignKey("users.user.sid", ondelete="CASCADE"), primary_key=True
     )
 
-    name: Mapped[str] = mapped_column(
-        VARCHAR(length=225), index=True
-    )
+    name: Mapped[str] = mapped_column(VARCHAR(length=225), index=True, unique=True)
 
     description: Mapped[str] = mapped_column()
 

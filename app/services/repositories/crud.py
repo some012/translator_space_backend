@@ -21,7 +21,9 @@ class CrudRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.model = model
         self.db = db
 
-    async def get_one(self, sid: UUID, custom_options: tuple[ExecutableOption, ...] = None) -> ModelType | None:
+    async def get_one(
+        self, sid: UUID, custom_options: tuple[ExecutableOption, ...] = None
+    ) -> ModelType | None:
         query = select(self.model).where(self.model.sid == sid)
 
         if custom_options:
@@ -30,7 +32,9 @@ class CrudRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         result = await self.db.execute(query)
         return result.scalars().first()
 
-    async def get_all(self, custom_options: tuple[ExecutableOption, ...] = None) -> Sequence[ModelType]:
+    async def get_all(
+        self, custom_options: tuple[ExecutableOption, ...] = None
+    ) -> Sequence[ModelType]:
         query = select(self.model)
 
         if custom_options:
@@ -41,18 +45,41 @@ class CrudRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
     async def create(self, c_obj: CreateSchemaType) -> ModelType:
         try:
-
             db_obj = self.model(**c_obj.model_dump())
 
             self.db.add(db_obj)
-
             await self.db.commit()
             await self.db.refresh(db_obj)
 
             return db_obj
-        # TODO: Поправить except на более нормальный вывод, в detail выводится куча непонятной инфы о ошибке
         except IntegrityError as e:
-            raise HTTPException(status_code=400, detail=str(e)) from e
+            raise HTTPException(
+                status_code=400,
+                detail=f"Duplicate entry detected. Ensure unique values for required fields.",
+            ) from e
+
+    async def create_all(
+        self, c_objects: Sequence[CreateSchemaType]
+    ) -> Sequence[CreateSchemaType]:
+        try:
+            c_objects_db = []
+
+            for c_obj in c_objects:
+                db_obj = self.model(**c_obj.model_dump())
+                c_objects_db.append(db_obj)
+
+            self.db.add_all(c_objects_db)
+            await self.db.commit()
+
+            for c_obj in c_objects_db:
+                await self.db.refresh(c_obj)
+
+            return c_objects
+        except IntegrityError as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Duplicate entry detected. Ensure unique values for required fields.",
+            ) from e
 
     async def update(self, db_obj: ModelType, u_obj: UpdateSchemaType) -> ModelType:
         try:
@@ -72,7 +99,10 @@ class CrudRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             return db_obj
 
         except IntegrityError as e:
-            raise HTTPException(status_code=400, detail=str(e)) from e
+            raise HTTPException(
+                status_code=400,
+                detail=f"Duplicate entry detected. Ensure unique values for required fields.",
+            ) from e
 
     async def delete(self, sid: UUID) -> ModelType | None:
         query = select(self.model).where(self.model.sid == sid)
