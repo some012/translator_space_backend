@@ -54,7 +54,7 @@ async def get_one_project(
     return project
 
 
-@router.get(path="/")
+@router.get(path="s")
 async def get_all_projects(
     project_service: ProjectService.register_deps(), is_extented: bool = False
 ) -> List[Project | ProjectAll]:

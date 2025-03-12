@@ -55,8 +55,8 @@ class ProjectService:
 
     async def delete_project(self, project_sid: UUID):
         logger.info("Get all files by this project sid")
-        all_files_sids = await self._file_repository.get_sids_by_project_sid(
-            project_sid=project_sid
+        all_files_sids = await self._file_repository.get_many_by_project_sid(
+            project_sid=project_sid, only_sids=True
         )
 
         logger.info("Delete all lines in files")

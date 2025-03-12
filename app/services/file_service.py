@@ -5,15 +5,18 @@ from fastapi import Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
 
+from app.config.logger import logger
 from app.deps.db import get_db
 from app.models import FileModel
 from app.schemas.file import FileUpdate, FileCreate
 from app.services.repositories.file_repository import FileRepository
+from app.services.repositories.line_repository import LineRepository
 
 
 class FileService:
     def __init__(self, db: AsyncSession):
         self._file_repository = FileRepository(db=db)
+        self._line_repository = LineRepository(db=db)
 
     async def create_file(self, file_in: FileCreate) -> FileModel:
         return await self._file_repository.create(c_obj=file_in)
@@ -35,11 +38,24 @@ class FileService:
             sid=file_sid, custom_options=custom_options
         )
 
+    async def get_many_by_project_sid(
+        self, project_sid: UUID, custom_options: tuple[ExecutableOption, ...] = None
+    ) -> Sequence[UUID]:
+        return await self._file_repository.get_many_by_project_sid(
+            project_sid=project_sid, custom_options=custom_options
+        )
+
     async def get_all_files(
         self,
         custom_options: tuple[ExecutableOption, ...] = None,
     ) -> Sequence[FileModel]:
         return await self._file_repository.get_all(custom_options=custom_options)
+
+    async def delete_file(self, file_sid: UUID):
+        logger.info("Delete all lines")
+        await self._line_repository.delete_all_by_file_sid(file_sid=file_sid)
+        logger.info("Delete file")
+        return await self._file_repository.delete(sid=file_sid)
 
     @staticmethod
     def register(db: AsyncSession):

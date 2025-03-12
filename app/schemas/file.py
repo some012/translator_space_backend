@@ -15,11 +15,12 @@ class FileCreate(FileBase):
     pass
 
 
-class FileUpdate(FileCreate):
-    pass
+class FileUpdate(CoreSchema):
+    project_sid: UUID
+    name: str
 
 
-class File(FileBase, CoreSchemaInDB):
+class File(FileUpdate, CoreSchemaInDB):
     pass
 
 
