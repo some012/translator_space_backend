@@ -8,7 +8,7 @@ from app.schemas.line import Line
 class FileBase(CoreSchema):
     project_sid: UUID
     name: str
-    path: Optional[str] = None
+    source_bytes: Optional[bytes] = None
 
 
 class FileCreate(FileBase):
@@ -23,5 +23,7 @@ class File(FileBase, CoreSchemaInDB):
     pass
 
 
-class FileLines(File):
+class FileLines(CoreSchemaInDB):
+    project_sid: UUID
+    name: str
     lines: list[Line]
