@@ -14,10 +14,18 @@ class FileRepository(CrudRepository[FileModel, FileCreate, FileUpdate]):
     def __init__(self, db: AsyncSession):
         super().__init__(FileModel, db)
 
-    async def get_sids_by_project_sid(
-        self, project_sid: UUID, custom_options: tuple[ExecutableOption, ...] = None
+    async def get_many_by_project_sid(
+        self,
+        project_sid: UUID,
+        custom_options: tuple[ExecutableOption, ...] = None,
+        only_sids: bool = False,
     ) -> Sequence[UUID]:
-        query = select(self.model.sid).where(self.model.project_sid == project_sid)
+        if only_sids:
+            query_model = self.model.sid
+        else:
+            query_model = self.model
+
+        query = select(query_model).where(self.model.project_sid == project_sid)
 
         if custom_options:
             query = query.options(*custom_options)
