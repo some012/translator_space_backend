@@ -1,10 +1,13 @@
 from typing import Annotated, Sequence
+from uuid import UUID
 
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.base import ExecutableOption
 
 from app.deps.db import get_db
-from app.schemas.line import LineCreate
+from app.models import LineModel
+from app.schemas.line import LineCreate, LineUpdate
 from app.services.repositories.line_repository import LineRepository
 
 
@@ -16,6 +19,44 @@ class LineService:
         self, list_lines: list[LineCreate]
     ) -> Sequence[LineCreate]:
         return await self._line_repository.create_all(c_objects=list_lines)
+
+    async def create_line(self, line_in: LineCreate) -> LineModel:
+        return await self._line_repository.create(c_obj=line_in)
+
+    async def update_line(self, line_sid: UUID, update_line: LineUpdate) -> LineModel:
+        line = await self._line_repository.get_one(sid=line_sid)
+
+        if line is None:
+            raise HTTPException(status_code=400, detail="Line not found")
+
+        return await self._line_repository.update(db_obj=line, u_obj=update_line)
+
+    async def get_one_line(
+        self,
+        line_sid: UUID,
+        custom_options: tuple[ExecutableOption, ...] = None,
+    ) -> LineModel | None:
+        return await self._line_repository.get_one(
+            sid=line_sid, custom_options=custom_options
+        )
+
+    async def get_all_lines(
+        self,
+        custom_options: tuple[ExecutableOption, ...] = None,
+    ) -> Sequence[LineModel]:
+        return await self._line_repository.get_all(custom_options=custom_options)
+
+    async def get_all_lines_by_file_sid(
+        self,
+        file_sid: UUID,
+        custom_options: tuple[ExecutableOption, ...] = None,
+    ) -> Sequence[LineModel]:
+        return await self._line_repository.get_many_by_file_sid(
+            file_sid=file_sid, custom_options=custom_options
+        )
+
+    async def delete_line(self, line_sid: UUID):
+        return await self._line_repository.delete(sid=line_sid)
 
     @staticmethod
     def register(db: AsyncSession):

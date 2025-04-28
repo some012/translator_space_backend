@@ -24,3 +24,8 @@ class LineUpdate(LineCreate):
 
 class Line(LineBase, CoreSchemaInDB):
     pass
+
+
+class ChangeLine(CoreSchema):
+    meaning: str
+    translation: str
