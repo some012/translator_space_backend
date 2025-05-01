@@ -3,7 +3,7 @@ from datetime import timedelta
 from io import BytesIO
 from typing import Annotated, Optional
 
-from fastapi import Depends, UploadFile
+from fastapi import Depends, UploadFile, HTTPException
 from minio import Minio
 from minio import S3Error
 from urllib3 import ProxyManager
@@ -47,8 +47,9 @@ class S3Service:
             self.minio_client.stat_object(s3_bucket, s3_object_path)
         except S3Error as e:
             if e.code == "NoSuchKey":
-                raise Exception(
-                    f"The S3 object with path='{s3_object_path}' does not exist in the bucket."
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"The file does not exist",
                 ) from e
             raise
 
@@ -106,8 +107,9 @@ class S3Service:
             return upload_file
 
         except Exception as e:
-            raise RuntimeError(
-                f"Failed to download file '{s3_object_path}': {str(e)}"
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to download file '{s3_object_path}': {str(e)}",
             ) from e
 
     async def generate_download_url(
@@ -135,7 +137,9 @@ class S3Service:
             )
             return presigned_url
         except Exception as e:
-            raise RuntimeError(f"Failed to generate download link: {str(e)}") from e
+            raise HTTPException(
+                status_code=500, detail=f"Failed to generate download link: {str(e)}"
+            ) from e
 
     async def generate_presigned_upload_url(
         self,
@@ -160,7 +164,9 @@ class S3Service:
             )
             return presigned_url, s3_object_path
         except Exception as e:
-            raise RuntimeError(f"Failed to generate pre-signed URL: {str(e)}") from e
+            raise HTTPException(
+                status_code=500, detail=f"Failed to generate pre-signed URL: {str(e)}"
+            ) from e
 
     async def generate_view_url(
         self,
@@ -179,7 +185,9 @@ class S3Service:
             )
             return presigned_url
         except Exception as e:
-            raise RuntimeError(f"Failed to generate view link: {str(e)}") from e
+            raise HTTPException(
+                status_code=500, detail=f"Failed to generate view URL: {str(e)}"
+            ) from e
 
     @staticmethod
     def register():
