@@ -1,6 +1,6 @@
 import uvicorn
 
-from app.config.settings.project import project_settings
+from app.config.settings import project_settings
 
 
 def run():

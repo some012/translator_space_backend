@@ -6,6 +6,11 @@ class ContentType(StrEnum):
     TS = "text/plain"
 
 
-class FileFormat(StrEnum):
+class TranslationFileFormat(StrEnum):
     XML = ".xml"
     TS = ".ts"
+
+
+class ImageFileFormat(StrEnum):
+    JPEG = ".jpg"
+    PNG = ".png"

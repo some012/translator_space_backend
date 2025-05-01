@@ -5,8 +5,10 @@ from fastapi import APIRouter, Depends, UploadFile, HTTPException, File
 from fastapi.responses import StreamingResponse
 
 from app.config.auth.current_user import get_current_user
+from app.config.db.s3.service import S3Service
 from app.config.logger import logger
 from app.enums.file import ContentType
+from app.enums.s3 import S3BucketName
 from app.parsing.ts.ts import ts_format_parser
 from app.schemas.file import FileCreate, FileLines, File as FileDB, FileUpdate
 from app.schemas.line import LineCreate
@@ -75,13 +77,14 @@ async def get_files_by_project(
 @router.post("/upload/{project_sid}")
 async def upload_translation_file(
     project_sid: UUID,
+    s3_service: S3Service.register_deps(),
     project_service: ProjectService.register_deps(),
     line_service: LineService.register_deps(),
     file_service: FileService.register_deps(),
     file: UploadFile = File(...),
 ) -> FileLines:
     logger.info(f"Validate {file.filename}")
-    file_helper.validate_file(file=file)
+    file_helper.validate_tranlation_file(file=file)
     logger.info("Check existence of project")
     project = await project_service.get_one_project(project_sid=project_sid)
 
@@ -89,17 +92,24 @@ async def upload_translation_file(
         logger.warning("Project not found")
         raise HTTPException(status_code=404, detail="Проект не найден!")
 
-    logger.info("Start create file in db")
     source_bytes = await file.read()
-    file_in = FileCreate(
-        project_sid=project_sid, name=file.filename, source_bytes=source_bytes
-    )
+    logger.info("Start create file in db")
+    file_in = FileCreate(project_sid=project_sid, name=file.filename)
     file_db = await file_service.create_file(file_in=file_in)
     file_sid = file_db.sid
     logger.info("Finish create file in db")
 
+    await s3_service.upload(
+        file=file,
+        source_bytes=source_bytes,
+        file_sid=str(file_sid),
+        s3_bucket_name=S3BucketName.TRANSLATION,
+    )
+
     logger.info("Parse a ts file to json")
     ts_json = await ts_format_parser.from_ts_to_json(source_bytes)
+
+    await file.close()
 
     logger.info("Add file with lines to db")
     all_lines_db = []
@@ -128,6 +138,7 @@ async def upload_translation_file(
 @router.post("/create/{sid}")
 async def create_translation_file(
     sid: UUID,
+    s3_service: S3Service.register_deps(),
     file_service: FileService.register_deps(),
 ):
     logger.info("Get file from db")
@@ -139,10 +150,17 @@ async def create_translation_file(
         logger.warning("File not found")
         raise HTTPException(status_code=404, detail="Файл не найден в базе!")
 
+    s3_file = await s3_service.download(
+        f"{file.sid}/{file.name}", S3BucketName.TRANSLATION
+    )
+
+    source_bytes = await s3_file.read()
     logger.info("Parse list lines to file")
     modified_file = await ts_format_parser.from_list_to_ts(
-        lines=file.lines, file_content=file.source_bytes, file_name=file.name
+        lines=file.lines, file_content=source_bytes, file_name=file.name
     )
+
+    await s3_file.close()
     logger.info("Return created file")
     return StreamingResponse(
         modified_file.file,
@@ -175,12 +193,19 @@ async def update_one_file(
 async def delete_one_file(
     sid: UUID,
     file_service: FileService.register_deps(),
+    s3_service: S3Service.register_deps(),
 ):
     file = await file_service.get_one_file(file_sid=sid)
 
     if not file:
         logger.warning("File not found")
         raise HTTPException(status_code=404, detail="Файл не найден!")
+
+    logger.info("Delete file from s3")
+    await s3_service.remove_digital_object(
+        f"{file.sid}/{file.name}", S3BucketName.TRANSLATION
+    )
+    logger.info("Successfully deleted file from db")
 
     logger.info("Delete file")
     await file_service.delete_file(file_sid=sid)

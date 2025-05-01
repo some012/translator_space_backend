@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,7 +8,7 @@ from starlette import status
 
 from app.deps.db import get_db
 from app.models import UserModel
-from app.schemas.user import UserCreate, UserRegistration
+from app.schemas.user import UserCreate, UserRegistration, UserUpdate
 from app.services.repositories.role_repository import RoleRepository
 from app.services.repositories.user_repository import UserRepository
 
@@ -63,6 +64,14 @@ class UserService:
         user = await self._user_repository.create(c_obj=create_user)
 
         return user
+
+    async def update_user(self, user_sid: UUID, update_user: UserUpdate) -> UserModel:
+        user = await self._user_repository.get_one(sid=user_sid)
+
+        if user is None:
+            raise HTTPException(status_code=400, detail="User not found")
+
+        return await self._user_repository.update(db_obj=user, u_obj=update_user)
 
     @staticmethod
     def register(db: AsyncSession):
