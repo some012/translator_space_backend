@@ -2,6 +2,7 @@ version: "3.9"
 
 volumes:
   postgres-data:
+  minio_data:
 
 services:
   translator-postgres:
@@ -13,3 +14,19 @@ services:
     restart: on-failure
     ports:
       - "5452:5432"
+
+  minio:
+    container_name: translator-minio
+    image: minio/minio:latest
+    env_file: .env
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web UI
+    command: server /data --console-address ":9001"
+
+
+
+

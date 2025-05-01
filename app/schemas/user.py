@@ -25,7 +25,7 @@ class UserRegistration(UserCreate):
     role_sid: UUID
 
 
-class UserUpdate(UserCreate):
+class UserUpdate(UserBase):
     pass
 
 

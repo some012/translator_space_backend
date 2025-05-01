@@ -38,8 +38,30 @@ class ProjectSettings(BaseSettings):
         }
         return PostgresDsn.build(**options)
 
+    # S3
+    S3_BUCKET_NAME: str = Field("translation")
+    S3_EXTERNAL_HOST: str = Field("0.0.0.0")
+    S3_PORT: int = Field(9000)
+    S3_ACCESS_KEY: str = Field("access_key")
+    S3_SECRET_KEY: str = Field("secret_key")
+    S3_REGION: str = Field("us-east-1")
+    S3_REQUIRE_TLS: bool = Field(False)
+    IS_PROXY_REQUIRED: bool = Field(False)
+    S3_INTERNAL_URL: str = Field("http://minio:9000")
+
+    S3_ENDPOINT: str | None = None
+
+    @field_validator("S3_ENDPOINT", mode="before")
+    def assemble_s3_host(cls, v: str | None, values: ValidationInfo) -> Any:
+        if isinstance(v, str):
+            return v
+
+        return f'{values.data.get("S3_EXTERNAL_HOST")}:{values.data.get("S3_PORT")}'
+
     # auth
-    SECRET_KEY: str = Field("09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7")
+    SECRET_KEY: str = Field(
+        "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+    )
     ALGORITHM: str = Field("HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 

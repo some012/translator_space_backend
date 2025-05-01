@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from starlette import status
 
 from app.config.auth.token_schema import TokenData
-from app.config.settings.project import project_settings
+from app.config.settings import project_settings
 
 
 class TokenHelper:

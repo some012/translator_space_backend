@@ -1,4 +1,3 @@
-from typing import Optional
 from uuid import UUID
 
 from app.schemas.core_schema import CoreSchema, CoreSchemaInDB
@@ -8,7 +7,6 @@ from app.schemas.line import Line
 class FileBase(CoreSchema):
     project_sid: UUID
     name: str
-    source_bytes: Optional[bytes] = None
 
 
 class FileCreate(FileBase):

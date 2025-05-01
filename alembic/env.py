@@ -6,7 +6,7 @@ from sqlalchemy import pool
 
 from app.config.db.postgres.schema import Schemas
 from app.config.db.postgres.target_metadata import metadata
-from app.config.settings.project import project_settings
+from app.config.settings import project_settings
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -29,14 +29,16 @@ target_metadata = metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+
 def get_url():
-    return (f"postgresql://"
-            f"{project_settings.POSTGRES_USER}:"
-            f"{project_settings.POSTGRES_PASSWORD}@"
-            f"{project_settings.POSTGRES_HOST}:"
-            f"{project_settings.POSTGRES_PORT}/"
-            f"{project_settings.POSTGRES_DB}"
-            )
+    return (
+        f"postgresql://"
+        f"{project_settings.POSTGRES_USER}:"
+        f"{project_settings.POSTGRES_PASSWORD}@"
+        f"{project_settings.POSTGRES_HOST}:"
+        f"{project_settings.POSTGRES_PORT}/"
+        f"{project_settings.POSTGRES_DB}"
+    )
 
 
 def run_migrations_offline() -> None:
@@ -94,9 +96,7 @@ def run_migrations_online() -> None:
 
         for data in Schemas:
             schema: Schemas = data
-            connection.execute(
-                sql.text(f"CREATE SCHEMA IF NOT EXISTS {schema.value}")
-            )
+            connection.execute(sql.text(f"CREATE SCHEMA IF NOT EXISTS {schema.value}"))
 
         with context.begin_transaction():
             context.run_migrations()
