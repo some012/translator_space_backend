@@ -16,7 +16,7 @@ from app.utils.helpers.token_helper import token_helper
 router = APIRouter()
 
 
-@router.post(path="/register")
+@router.post(path="/register/")
 async def create_user(
     user_in: UserCreate,
     user_service: UserService.register_deps(),
@@ -30,7 +30,7 @@ async def create_user(
     return user
 
 
-@router.post("/login")
+@router.post("/login/")
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     user_service: UserService.register_deps(),

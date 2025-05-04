@@ -1,7 +1,7 @@
 from typing import Annotated, Sequence
 from uuid import UUID
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
 
@@ -21,12 +21,7 @@ class FileService:
     async def create_file(self, file_in: FileCreate) -> FileModel:
         return await self._file_repository.create(c_obj=file_in)
 
-    async def update_file(self, file_sid: UUID, update_file: FileUpdate) -> FileModel:
-        file = await self._file_repository.get_one(sid=file_sid)
-
-        if file is None:
-            raise HTTPException(status_code=400, detail="File not found")
-
+    async def update_file(self, file: FileModel, update_file: FileUpdate) -> FileModel:
         return await self._file_repository.update(db_obj=file, u_obj=update_file)
 
     async def get_one_file(

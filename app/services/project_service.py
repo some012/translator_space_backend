@@ -1,7 +1,8 @@
-from typing import Annotated, Sequence
+from datetime import datetime
+from typing import Annotated, Sequence, Optional
 from uuid import UUID
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
 
@@ -24,13 +25,8 @@ class ProjectService:
         return await self._project_repository.create(c_obj=project_in)
 
     async def update_project(
-        self, project_sid: UUID, update_project: ProjectUpdate
+        self, project: ProjectModel, update_project: ProjectUpdate
     ) -> ProjectModel:
-        project = await self._project_repository.get_one(sid=project_sid)
-
-        if project is None:
-            raise HTTPException(status_code=400, detail="Project not found")
-
         return await self._project_repository.update(
             db_obj=project, u_obj=update_project
         )
@@ -68,6 +64,20 @@ class ProjectService:
 
         logger.info("Delete project")
         return await self._project_repository.delete(sid=project_sid)
+
+    async def search_projects(
+        self,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        datetime_start: Optional[datetime] = None,
+        datetime_end: Optional[datetime] = None,
+    ):
+        return await self._project_repository.search_by_all_fields(
+            name=name,
+            description=description,
+            datetime_start=datetime_start,
+            datetime_end=datetime_end,
+        )
 
     @staticmethod
     def register(db: AsyncSession):

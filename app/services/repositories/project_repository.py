@@ -1,4 +1,7 @@
-from sqlalchemy import select
+from datetime import datetime
+from typing import Optional, Sequence
+
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
 
@@ -21,3 +24,29 @@ class ProjectRepository(CrudRepository[ProjectModel, ProjectCreate, ProjectUpdat
 
         result = await self.db.execute(query)
         return result.scalars().first()
+
+    async def search_by_all_fields(
+        self,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        datetime_start: Optional[datetime] = None,
+        datetime_end: Optional[datetime] = None,
+    ) -> Sequence[ProjectModel]:
+        conditions = []
+
+        if name:
+            conditions.append(self.model.name.ilike(f"%{name}%"))  # LIKE %name%
+        if description:
+            conditions.append(self.model.description.ilike(f"%{description}%"))
+        if datetime_start:
+            conditions.append(self.model.created >= datetime_start)
+        if datetime_end:
+            conditions.append(self.model.created <= datetime_end)
+
+        query = select(self.model)
+
+        if conditions:
+            query = query.where(and_(*conditions))
+
+        result = await self.db.execute(query)
+        return result.scalars().all()

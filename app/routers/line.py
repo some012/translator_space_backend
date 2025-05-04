@@ -25,12 +25,12 @@ async def get_one_line(
 
     if not line:
         logger.warning("Line not found")
-        raise HTTPException(status_code=404, detail="Строка не найден!")
+        raise HTTPException(status_code=404, detail="Строка не найдена!")
 
     return line
 
 
-@router.get(path="s")
+@router.get(path="s/")
 async def get_all_lines(line_service: LineService.register_deps()) -> List[Line]:
     logger.info("Get lines")
     return await line_service.get_all_lines()
@@ -62,7 +62,7 @@ async def update_one_line(
     update_line = LineUpdate(**line.__dict__)
 
     logger.info("Update line")
-    updated_line = await line_service.update_line(line_sid=sid, update_line=update_line)
+    updated_line = await line_service.update_line(line=line, update_line=update_line)
     logger.info("Successfully updated line")
     return updated_line
 

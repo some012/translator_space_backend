@@ -1,7 +1,9 @@
-from typing import Annotated, List
+from datetime import datetime
+from typing import Annotated, List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi_pagination.iterables import LimitOffsetPage, paginate
 
 from app.config.auth.current_user import get_current_user
 from app.config.logger import logger
@@ -19,7 +21,7 @@ from app.utils.custom_options.project_options import ProjectCustomOptions
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
-@router.post(path="/add")
+@router.post(path="/add/")
 async def create_project(
     project_create: ProjectCreate,
     project_service: ProjectService.register_deps(),
@@ -54,7 +56,7 @@ async def get_one_project(
     return project
 
 
-@router.get(path="s")
+@router.get(path="s/")
 async def get_all_projects(
     project_service: ProjectService.register_deps(), is_extented: bool = False
 ) -> List[Project | ProjectAll]:
@@ -65,6 +67,23 @@ async def get_all_projects(
         )
     logger.info("Get projects")
     return await project_service.get_all_projects()
+
+
+@router.get(path="/search/", response_model=LimitOffsetPage[Project])
+async def search(
+    project_service: ProjectService.register_deps(),
+    name: Optional[str] = None,
+    description: Optional[str] = None,
+    datetime_start: Optional[datetime] = None,
+    datetime_end: Optional[datetime] = None,
+):
+    results = await project_service.search_projects(
+        name=name,
+        description=description,
+        datetime_start=datetime_start,
+        datetime_end=datetime_end,
+    )
+    return paginate(results)
 
 
 @router.put(path="/update/{sid}")
@@ -81,7 +100,7 @@ async def update_one_project(
 
     logger.info("Update project")
     updated_project = await project_service.update_project(
-        project_sid=sid, update_project=update_project
+        project=project, update_project=update_project
     )
     logger.info("Successfully updated project")
     return updated_project
