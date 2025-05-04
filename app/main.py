@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi_pagination import add_pagination
 from starlette.middleware.cors import CORSMiddleware
 
 from app.config.settings import project_settings
@@ -11,6 +12,8 @@ app = FastAPI(
 )
 
 origins = ["*"]
+
+add_pagination(app)
 
 app.add_middleware(
     CORSMiddleware,

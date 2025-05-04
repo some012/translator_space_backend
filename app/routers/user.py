@@ -14,14 +14,14 @@ from app.utils.helpers.file_helper import file_helper
 router = APIRouter()
 
 
-@router.get("/me")
+@router.get("/me/")
 async def get_me(
     current_user: Annotated[UserRole, Depends(get_current_user)],
 ) -> UserRole:
     return current_user
 
 
-@router.post("/img")
+@router.post("/img/")
 async def add_image(
     current_user: Annotated[UserRole, Depends(get_current_user)],
     s3_service: S3Service.register_deps(),
@@ -54,7 +54,7 @@ async def add_image(
     return ViewUrlSchemaOut(url=img_url)
 
 
-@router.get("/img")
+@router.get("/img/")
 async def get_image(
     current_user: Annotated[UserRole, Depends(get_current_user)],
     s3_service: S3Service.register_deps(),
@@ -66,7 +66,7 @@ async def get_image(
     return ViewUrlSchemaOut(url=img_url)
 
 
-@router.delete("/img")
+@router.delete("/img/")
 async def delete_image(
     current_user: Annotated[UserRole, Depends(get_current_user)],
     s3_service: S3Service.register_deps(),

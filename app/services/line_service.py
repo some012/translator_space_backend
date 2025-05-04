@@ -1,7 +1,7 @@
 from typing import Annotated, Sequence
 from uuid import UUID
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
 
@@ -23,12 +23,7 @@ class LineService:
     async def create_line(self, line_in: LineCreate) -> LineModel:
         return await self._line_repository.create(c_obj=line_in)
 
-    async def update_line(self, line_sid: UUID, update_line: LineUpdate) -> LineModel:
-        line = await self._line_repository.get_one(sid=line_sid)
-
-        if line is None:
-            raise HTTPException(status_code=400, detail="Line not found")
-
+    async def update_line(self, line: LineModel, update_line: LineUpdate) -> LineModel:
         return await self._line_repository.update(db_obj=line, u_obj=update_line)
 
     async def get_one_line(

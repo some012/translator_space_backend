@@ -28,7 +28,7 @@ async def create_admin(
     return user
 
 
-@router.post(path="/role")
+@router.post(path="/role/")
 async def create_role(
     role: RoleCreate, role_service: RoleService.register_deps()
 ) -> Role:

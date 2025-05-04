@@ -39,7 +39,7 @@ async def get_one_file_from_db(
     return file
 
 
-@router.get(path="s")
+@router.get(path="s/")
 async def get_all_files(
     file_service: FileService.register_deps(), is_extented: bool = False
 ) -> List[FileDB | FileLines]:
@@ -184,7 +184,7 @@ async def update_one_file(
         raise HTTPException(status_code=404, detail="Файл не найден!")
 
     logger.info("Update file")
-    updated_file = await file_service.update_file(file_sid=sid, update_file=update_file)
+    updated_file = await file_service.update_file(file=file, update_file=update_file)
     logger.info("Successfully updated file")
     return updated_file
 
