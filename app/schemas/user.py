@@ -32,6 +32,7 @@ class UserUpdate(UserBase):
 class User(UserBase, CoreSchemaInDB):
     img: str | None
     hashed_password: str
+    is_active: bool
     role_sid: UUID
     last_activity: datetime
 

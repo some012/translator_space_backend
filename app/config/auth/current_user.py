@@ -30,6 +30,15 @@ async def get_current_user(
     return current_user
 
 
+async def get_current_active_user(
+        user_service: UserService.register_deps(),
+        current_user: Annotated[UserRole, Depends(get_current_user)],
+) -> UserRole:
+    if not await user_service.is_active(user=current_user):
+        raise HTTPException(status_code=404, detail="Пользователь не активен")
+
+    return current_user
+
 async def get_current_admin(
     current_user: Annotated[UserRole, Depends(get_current_user)],
 ) -> UserRole:

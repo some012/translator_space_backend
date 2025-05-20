@@ -8,7 +8,7 @@ from app.config.db.postgres.schema import Schemas
 from app.models.core_model import CoreModel
 
 if TYPE_CHECKING:
-    from app.models import SettingsModel, RoleModel, ProjectModel
+    from app.models import RoleModel, ProjectModel
 
 
 class UserModel(CoreModel):
@@ -41,9 +41,11 @@ class UserModel(CoreModel):
 
     last_activity: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True))
 
-    # relations
+    is_active: Mapped[bool] = mapped_column(
+        default=True, comment="locked or unlocked", server_default="true"
+    )
 
-    settings: Mapped["SettingsModel"] = relationship(back_populates="user")
+    # relations
 
     role: Mapped["RoleModel"] = relationship(back_populates="users")
 

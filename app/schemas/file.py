@@ -7,6 +7,8 @@ from app.schemas.line import Line
 class FileBase(CoreSchema):
     project_sid: UUID
     name: str
+    source_language: str
+    translate_language: str
 
 
 class FileCreate(FileBase):
@@ -16,6 +18,8 @@ class FileCreate(FileBase):
 class FileUpdate(CoreSchema):
     project_sid: UUID
     name: str
+    source_language: str
+    translate_language: str
 
 
 class File(FileUpdate, CoreSchemaInDB):
