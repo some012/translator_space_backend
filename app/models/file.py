@@ -27,6 +27,10 @@ class FileModel(CoreModel):
 
     name: Mapped[str] = mapped_column(VARCHAR(length=225), index=True, unique=True)
 
+    source_language: Mapped[str] = mapped_column(VARCHAR, index=True, nullable=True)
+
+    translate_language: Mapped[str] = mapped_column(VARCHAR, index=True, nullable=True)
+
     project_sid: Mapped[UUID] = mapped_column(
         ForeignKey("projects.project.sid", ondelete="CASCADE"), primary_key=True
     )

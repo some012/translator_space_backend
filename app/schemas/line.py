@@ -29,3 +29,9 @@ class Line(LineBase, CoreSchemaInDB):
 class ChangeLine(CoreSchema):
     meaning: str
     translation: str
+
+
+class TranslationMLLine(CoreSchema):
+    sid: UUID
+    meaning: str
+    translation: str

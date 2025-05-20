@@ -93,8 +93,17 @@ async def upload_translation_file(
         raise HTTPException(status_code=404, detail="Проект не найден!")
 
     source_bytes = await file.read()
+
+    logger.info("Parse a ts file to json")
+    ts_json = await ts_format_parser.from_ts_to_json(source_bytes)
+
     logger.info("Start create file in db")
-    file_in = FileCreate(project_sid=project_sid, name=file.filename)
+    file_in = FileCreate(
+        project_sid=project_sid,
+        name=file.filename,
+        source_language=ts_json["sourcelanguage"],
+        translate_language=ts_json["language"],
+    )
     file_db = await file_service.create_file(file_in=file_in)
     file_sid = file_db.sid
     logger.info("Finish create file in db")
@@ -105,9 +114,6 @@ async def upload_translation_file(
         file_sid=str(file_sid),
         s3_bucket_name=S3BucketName.TRANSLATION,
     )
-
-    logger.info("Parse a ts file to json")
-    ts_json = await ts_format_parser.from_ts_to_json(source_bytes)
 
     await file.close()
 

@@ -1,7 +1,7 @@
-from typing import Annotated, Sequence
+from typing import Annotated, Sequence, List
 from uuid import UUID
 
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
 
@@ -49,6 +49,18 @@ class LineService:
         return await self._line_repository.get_many_by_file_sid(
             file_sid=file_sid, custom_options=custom_options
         )
+
+    async def get_many(
+        self, sids: List[UUID], custom_options: tuple[ExecutableOption, ...] = None
+    ) -> Sequence[LineModel]:
+        lines = await self._line_repository.get_many_by_sids(
+            sids=sids, custom_options=custom_options
+        )
+
+        if len(sids) != len(lines):
+            raise HTTPException(status_code=404, detail="Lines not found")
+
+        return lines
 
     async def delete_line(self, line_sid: UUID):
         return await self._line_repository.delete(sid=line_sid)

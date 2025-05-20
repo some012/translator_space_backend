@@ -31,3 +31,16 @@ class LineRepository(CrudRepository[LineModel, LineCreate, LineUpdate]):
 
         result = await self.db.execute(query)
         return result.scalars().all()
+
+    async def get_many_by_sids(
+        self,
+        sids: Sequence[UUID],
+        custom_options: tuple[ExecutableOption, ...] = None,
+    ) -> Sequence[LineModel]:
+        query = select(self.model).where(self.model.sid.in_(sids))
+
+        if custom_options:
+            query = query.options(*custom_options)
+
+        result = await self.db.execute(query)
+        return result.scalars().all()
