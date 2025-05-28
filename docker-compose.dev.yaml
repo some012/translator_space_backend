@@ -3,6 +3,10 @@ version: "3.9"
 volumes:
   postgres-data:
   minio_data:
+  redis_data:
+
+networks:
+  net:
 
 services:
   translator-postgres:
@@ -26,6 +30,18 @@ services:
       - "9000:9000"   # S3 API
       - "9001:9001"   # Web UI
     command: server /data --console-address ":9001"
+
+  redis:
+    container_name: translator-redis
+    image: redis:6.2-alpine
+    env_file: .env
+    volumes:
+      - redis_data:/data
+    restart: on-failure
+    ports:
+      - "6379:6379"
+    networks:
+      - net
 
 
 

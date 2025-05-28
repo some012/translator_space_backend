@@ -65,6 +65,11 @@ class ProjectSettings(BaseSettings):
     ALGORITHM: str = Field("HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
+    # redis
+    REDIS_HOST: str = Field("0.0.0.0")
+    REDIS_PORT: int = Field(6379)
+    ACTIVITY_COUNT_EXPIRE_SECONDS: int = 86400 * 2
+
     # superuser
     SUPERUSER_NAME: str = Field("name")
     SUPERUSER_MIDDLE_NAME: str = Field("middle_name")

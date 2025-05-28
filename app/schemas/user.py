@@ -39,3 +39,8 @@ class User(UserBase, CoreSchemaInDB):
 
 class UserRole(User):
     role: Role
+
+
+class UserActivity(CoreSchema):
+    sid: UUID
+    count: int

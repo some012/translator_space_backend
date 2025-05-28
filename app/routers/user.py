@@ -1,3 +1,5 @@
+import json
+from datetime import datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, UploadFile, File, Body
@@ -7,11 +9,13 @@ from starlette.responses import JSONResponse
 from app.config.auth.current_user import get_current_active_user
 from app.config.auth.password_schema import ChangePassword, ResetPassword
 from app.config.consts.msg import Msg
+from app.config.db.redis.session import redis_conn
 from app.config.db.s3.schemas import ViewUrlSchemaOut, MessageResponseSchemaOut
 from app.config.db.s3.service import S3Service
 from app.config.logger import logger
+from app.config.settings import project_settings
 from app.enums.s3 import S3BucketName
-from app.schemas.user import UserUpdate, UserRole
+from app.schemas.user import UserUpdate, UserRole, UserActivity
 from app.services.user_service import UserService
 from app.utils.helpers.file_helper import file_helper
 
@@ -71,6 +75,52 @@ async def reset_password(
     return await user_service.reset_user_password(
         user_sid=current_user.sid, new_password=data.new_password
     )
+
+
+@router.get("/activity")
+async def get_count_activity_user(
+    current_user: Annotated[UserRole, Depends(get_current_active_user)],
+) -> UserActivity:
+    key_date = f"{current_user.sid}:date_activity"
+    key_count = f"{current_user.sid}:activity"
+
+    logger.info("Get last activity user from redis")
+    last_date_str, count_str = await redis_conn.mget(key_date, key_count)
+    today = datetime.utcnow().date()
+
+    if last_date_str and count_str:
+        last_date_json = json.loads(last_date_str)
+        count_json = json.loads(count_str)
+        last_date = datetime.strptime(last_date_json["date"], "%Y-%m-%d").date()
+        count = int(count_json["count"]) if count_str else 1
+
+        if last_date == today:
+            logger.info("Same day in last activity, nothing changed")
+            pass
+        elif today == last_date + timedelta(days=1):
+            logger.info("User's activity detected")
+            count += 1
+        else:
+            count = 1
+    else:
+        logger.info("First visit of user")
+        count = 1
+
+    logger.info("Save data of last activity in redis")
+    await redis_conn.setex(
+        name=key_date,
+        time=project_settings.ACTIVITY_COUNT_EXPIRE_SECONDS,
+        value=json.dumps({"date": str(current_user.last_activity.date())}),
+    )
+
+    await redis_conn.setex(
+        name=key_count,
+        time=project_settings.ACTIVITY_COUNT_EXPIRE_SECONDS,
+        value=json.dumps({"count": count}),
+    )
+
+    logger.info("Get count activity of current user")
+    return UserActivity(sid=current_user.sid, count=count)
 
 
 @router.post("/img/")
