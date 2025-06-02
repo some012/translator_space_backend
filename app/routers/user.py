@@ -14,7 +14,7 @@ from app.config.db.s3.schemas import ViewUrlSchemaOut, MessageResponseSchemaOut
 from app.config.db.s3.service import S3Service
 from app.config.logger import logger
 from app.config.settings import project_settings
-from app.enums.s3 import S3BucketName
+from app.enums.s3 import S3BucketName, S3FolderName
 from app.schemas.user import UserUpdate, UserRole, UserActivity
 from app.services.user_service import UserService
 from app.utils.helpers.file_helper import file_helper
@@ -135,19 +135,28 @@ async def add_image(
 
     source_bytes = await file.read()
 
-    logger.info("Upload file to S3")
-    await s3_service.upload(file, source_bytes, S3BucketName.IMAGES)
-    logger.info("Uploaded file to S3")
-
     logger.info("Start update user in db")
     current_user.img = file.filename
     user_in = UserUpdate(**current_user.__dict__)
     await user_service.update_user(user_sid=current_user.sid, update_user=user_in)
     logger.info("Finish update user in db")
 
+    logger.info("Upload file to S3")
+    await s3_service.upload(
+        file=file,
+        source_bytes=source_bytes,
+        s3_bucket_name=S3BucketName.IMAGES,
+        s3_folder_name=S3FolderName.USER,
+    )
+    logger.info("Uploaded file to S3")
+
+    s3_object_path = s3_service.generate_upload_path_with_folder_name(
+        s3_object_file_name=current_user.img, s3_folder_name=S3FolderName.USER
+    )
+
     logger.info("Generate view url for access to front")
     img_url = await s3_service.generate_view_url(
-        s3_object_path=file.filename, s3_bucket=S3BucketName.IMAGES
+        s3_object_path=s3_object_path, s3_bucket=S3BucketName.IMAGES
     )
     logger.info("View url generated")
 
@@ -161,9 +170,12 @@ async def get_image(
     current_user: Annotated[UserRole, Depends(get_current_active_user)],
     s3_service: S3Service.register_deps(),
 ) -> ViewUrlSchemaOut:
+    s3_object_path = s3_service.generate_upload_path_with_folder_name(
+        s3_object_file_name=current_user.img, s3_folder_name=S3FolderName.PROJECT
+    )
     logger.info("Get image from s3")
     img_url = await s3_service.generate_view_url(
-        s3_object_path=current_user.img, s3_bucket=S3BucketName.IMAGES
+        s3_object_path=s3_object_path, s3_bucket=S3BucketName.IMAGES
     )
     return ViewUrlSchemaOut(url=img_url)
 
@@ -171,11 +183,22 @@ async def get_image(
 @router.delete("/img/")
 async def delete_image(
     current_user: Annotated[UserRole, Depends(get_current_active_user)],
+    user_service: UserService.register_deps(),
     s3_service: S3Service.register_deps(),
 ) -> MessageResponseSchemaOut:
+    s3_object_path = s3_service.generate_upload_path_with_folder_name(
+        s3_object_file_name=current_user.img, s3_folder_name=S3FolderName.PROJECT
+    )
     logger.info("Delete image from s3")
     await s3_service.remove_digital_object(
-        s3_object_path=current_user.img, s3_bucket=S3BucketName.IMAGES
+        s3_object_path=s3_object_path, s3_bucket=S3BucketName.IMAGES
     )
+
+    logger.info("Start update user in db")
+    current_user.img = None
+    user_in = UserUpdate(**current_user.__dict__)
+    await user_service.update_user(user_sid=current_user.sid, update_user=user_in)
+    logger.info("Finish update user in db")
+
     logger.info("Finish delete image from s3")
     return MessageResponseSchemaOut(message="Image has been deleted")

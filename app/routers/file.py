@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, UploadFile, HTTPException, File
 from fastapi.responses import StreamingResponse
 
-from app.config.auth.current_user import get_current_user
+from app.config.auth.current_user import get_current_active_user
 from app.config.db.s3.service import S3Service
 from app.config.logger import logger
 from app.enums.file import ContentType
@@ -18,7 +18,7 @@ from app.services.project_service import ProjectService
 from app.utils.custom_options.file_options import FileCustomOptions
 from app.utils.helpers.file_helper import file_helper
 
-router = APIRouter(dependencies=[Depends(get_current_user)])
+router = APIRouter()
 
 
 @router.get("/{sid}")
@@ -74,7 +74,7 @@ async def get_files_by_project(
     return await file_service.get_many_by_project_sid(project_sid=sid)
 
 
-@router.post("/upload/{project_sid}")
+@router.post("/upload/{project_sid}", dependencies=[Depends(get_current_active_user)])
 async def upload_translation_file(
     project_sid: UUID,
     s3_service: S3Service.register_deps(),
@@ -141,7 +141,7 @@ async def upload_translation_file(
     )
 
 
-@router.post("/create/{sid}")
+@router.post("/create/{sid}", dependencies=[Depends(get_current_active_user)])
 async def create_translation_file(
     sid: UUID,
     s3_service: S3Service.register_deps(),
@@ -177,7 +177,7 @@ async def create_translation_file(
     )
 
 
-@router.put(path="/update/{sid}")
+@router.put(path="/update/{sid}", dependencies=[Depends(get_current_active_user)])
 async def update_one_file(
     sid: UUID,
     update_file: FileUpdate,
@@ -195,7 +195,7 @@ async def update_one_file(
     return updated_file
 
 
-@router.delete(path="/delete/{sid}")
+@router.delete(path="/delete/{sid}", dependencies=[Depends(get_current_active_user)])
 async def delete_one_file(
     sid: UUID,
     file_service: FileService.register_deps(),
@@ -207,10 +207,12 @@ async def delete_one_file(
         logger.warning("File not found")
         raise HTTPException(status_code=404, detail="Файл не найден!")
 
-    logger.info("Delete file from s3")
-    await s3_service.remove_digital_object(
-        f"{file.sid}/{file.name}", S3BucketName.TRANSLATION
+    s3_object_path = s3_service.generate_upload_path_with_file_sid(
+        s3_object_file_name=file.name, file_sid=file.sid
     )
+
+    logger.info("Delete file from s3")
+    await s3_service.remove_digital_object(s3_object_path, S3BucketName.TRANSLATION)
     logger.info("Successfully deleted file from db")
 
     logger.info("Delete file")

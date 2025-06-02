@@ -31,7 +31,9 @@ class ProjectModel(CoreModel):
 
     name: Mapped[str] = mapped_column(VARCHAR(length=225), index=True, unique=True)
 
-    description: Mapped[str] = mapped_column()
+    description: Mapped[str] = mapped_column(VARCHAR(length=1000))
+
+    img: Mapped[str] = mapped_column(nullable=True)
 
     # relations
 

@@ -9,7 +9,7 @@ from minio import S3Error
 from urllib3 import ProxyManager
 
 from app.config.settings import project_settings
-from app.enums.s3 import S3BucketName
+from app.enums.s3 import S3BucketName, S3FolderName
 
 
 class S3Service:
@@ -31,14 +31,19 @@ class S3Service:
         )
         self.tmp_path: str = "./tmp"
 
-    def __generate_upload_path_with_file_name(
-        self, s3_object_file_name: str, file_sid: str | None = None
+    def generate_upload_path_with_file_sid(
+        self,
+        s3_object_file_name: str,
+        file_sid: str,
+    ):
+        return f"{file_sid}/{s3_object_file_name}"
+
+    def generate_upload_path_with_folder_name(
+        self,
+        s3_object_file_name: str,
+        s3_folder_name: S3FolderName,
     ) -> str:
-        if file_sid:
-            s3_object_path = f"{file_sid}/{s3_object_file_name}"
-        else:
-            s3_object_path = s3_object_file_name
-        return s3_object_path
+        return f"{s3_folder_name}/{s3_object_file_name}"
 
     def __validate_object_existance(
         self, s3_object_path: str, s3_bucket: S3BucketName
@@ -66,15 +71,17 @@ class S3Service:
         file: UploadFile,
         source_bytes: bytes,
         s3_bucket_name: S3BucketName,
+        s3_folder_name: Optional[S3FolderName] = None,
         file_sid: Optional[str] = None,
     ) -> str:
         if s3_bucket_name == S3BucketName.TRANSLATION and file_sid:
-            s3_object_path: str = self.__generate_upload_path_with_file_name(
+            s3_object_path: str = self.generate_upload_path_with_file_sid(
                 file.filename, file_sid
             )
         else:
-            s3_object_path: str = self.__generate_upload_path_with_file_name(
-                file.filename
+            s3_object_path: str = self.generate_upload_path_with_folder_name(
+                file.filename,
+                s3_folder_name,
             )
         self.minio_client.put_object(
             bucket_name=s3_bucket_name,
@@ -110,62 +117,6 @@ class S3Service:
             raise HTTPException(
                 status_code=500,
                 detail=f"Failed to download file '{s3_object_path}': {str(e)}",
-            ) from e
-
-    async def generate_download_url(
-        self,
-        s3_object_path: str,
-        s3_bucket: S3BucketName,
-        desired_filename: str | None = None,
-        expiration_minutes: int = 360,
-    ) -> str:
-        self.__validate_object_existance(
-            s3_object_path=s3_object_path, s3_bucket=s3_bucket
-        )
-        file_name: str = (
-            desired_filename if desired_filename else os.path.basename(s3_object_path)
-        )
-        response_headers: dict[str, str] = {
-            "response-content-disposition": f"attachment; filename={file_name}"
-        }
-        try:
-            presigned_url: str = self.minio_client.presigned_get_object(
-                bucket_name=s3_bucket,
-                object_name=s3_object_path,
-                expires=timedelta(minutes=expiration_minutes),
-                response_headers=response_headers,  # type: ignore
-            )
-            return presigned_url
-        except Exception as e:
-            raise HTTPException(
-                status_code=500, detail=f"Failed to generate download link: {str(e)}"
-            ) from e
-
-    async def generate_presigned_upload_url(
-        self,
-        s3_object_path: str | None,
-        s3_bucket: S3BucketName,
-        expiration_minutes: int = 360,
-        file_sid: Optional[str] = None,
-    ) -> tuple[str, str]:
-        if s3_bucket == S3BucketName.TRANSLATION and file_sid:
-            s3_object_path = self.__generate_upload_path_with_file_name(
-                s3_object_file_name=s3_object_path, file_sid=file_sid
-            )
-        else:
-            s3_object_path = self.__generate_upload_path_with_file_name(
-                s3_object_file_name=s3_object_path
-            )
-        try:
-            presigned_url = self.minio_client.presigned_put_object(
-                bucket_name=s3_bucket,
-                object_name=s3_object_path,
-                expires=timedelta(minutes=expiration_minutes),
-            )
-            return presigned_url, s3_object_path
-        except Exception as e:
-            raise HTTPException(
-                status_code=500, detail=f"Failed to generate pre-signed URL: {str(e)}"
             ) from e
 
     async def generate_view_url(
