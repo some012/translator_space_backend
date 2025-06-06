@@ -29,4 +29,6 @@ class File(FileUpdate, CoreSchemaInDB):
 class FileLines(CoreSchemaInDB):
     project_sid: UUID
     name: str
+    source_language: str
+    translate_language: str
     lines: list[Line]

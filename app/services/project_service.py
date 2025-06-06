@@ -43,6 +43,9 @@ class ProjectService:
     async def get_by_name(self, name: str) -> ProjectModel | None:
         return await self._project_repository.get_by_name(name=name)
 
+    async def get_by_user(self, user_sid: UUID) -> ProjectModel | None:
+        return await self._project_repository.get_by_user_sid(user_sid=user_sid)
+
     async def get_all_projects(
         self,
         custom_options: tuple[ExecutableOption, ...] = None,

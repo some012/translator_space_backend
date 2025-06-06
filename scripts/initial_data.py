@@ -1,10 +1,11 @@
 import asyncio
 import sys
 
+from app.config.db.postgres.session import async_session
+
 sys.path = ["", ".."] + sys.path[1:]
 
 from app.config.db.init import init_db
-from app.config.db.session import async_session
 
 
 async def init_psql() -> None:

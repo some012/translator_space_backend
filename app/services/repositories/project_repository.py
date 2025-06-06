@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Optional, Sequence
+from uuid import UUID
 
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,6 +19,17 @@ class ProjectRepository(CrudRepository[ProjectModel, ProjectCreate, ProjectUpdat
         self, name: str, custom_options: tuple[ExecutableOption, ...] = None
     ) -> ProjectModel | None:
         query = select(self.model).where(self.model.name == name)
+
+        if custom_options:
+            query = query.options(*custom_options)
+
+        result = await self.db.execute(query)
+        return result.scalars().first()
+
+    async def get_by_user_sid(
+        self, user_sid: UUID, custom_options: tuple[ExecutableOption, ...] = None
+    ) -> ProjectModel | None:
+        query = select(self.model).where(self.model.user_sid == user_sid)
 
         if custom_options:
             query = query.options(*custom_options)

@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 from fastapi import HTTPException
@@ -7,6 +8,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
 
+from app.config.db.redis.session import redis_conn
+from app.config.settings import project_settings
 from app.models import UserModel
 from app.schemas.user import UserCreate, UserUpdate
 from app.services.repositories.crud import CrudRepository
@@ -77,7 +80,13 @@ class UserRepository(CrudRepository[UserModel, UserCreate, UserUpdate]):
         if not password_helper.verify_password(password, user.hashed_password):
             return None
 
-        user.last_activity = datetime.now()
+        user.last_activity = datetime.utcnow()
+
+        await redis_conn.setex(
+            name=f"{user.sid}:date_activity",
+            time=project_settings.ACTIVITY_COUNT_EXPIRE_SECONDS,
+            value=json.dumps({"date": str(user.last_activity.date())}),
+        )
 
         await self.db.commit()
         await self.db.refresh(user)

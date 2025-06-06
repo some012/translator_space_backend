@@ -22,6 +22,7 @@ class ProjectUpdate(ProjectCreate):
 
 
 class Project(ProjectBase, CoreSchemaInDB):
+    img: str | None
     user_sid: UUID
 
 

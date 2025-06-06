@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.config.auth.current_user import get_current_user
+from app.config.auth.current_user import get_current_active_user
 from app.config.logger import logger
 from app.schemas.line import (
     Line,
@@ -16,7 +16,7 @@ from app.services.line_service import LineService
 from app.services.translation.translation_service import TranslationService
 from app.utils.custom_options.line_options import LineCustomOptions
 
-router = APIRouter(dependencies=[Depends(get_current_user)])
+router = APIRouter()
 
 
 @router.get(path="/{sid}")
@@ -48,7 +48,9 @@ async def get_all_lines_by_file(
     return await line_service.get_all_lines_by_file_sid(file_sid=sid)
 
 
-@router.post(path="/generate-translation/{sid}")
+@router.post(
+    path="/generate-translation/{sid}", dependencies=[Depends(get_current_active_user)]
+)
 async def generate_translation_for_line(
     sid: UUID,
     line_service: LineService.register_deps(),
@@ -69,7 +71,10 @@ async def generate_translation_for_line(
     return ChangeLine(meaning=line.meaning, translation=translation_ml[0])
 
 
-@router.post(path="/generate-translation/by-file/{sid}")
+@router.post(
+    path="/generate-translation/by-file/{sid}",
+    dependencies=[Depends(get_current_active_user)],
+)
 async def generate_translation_for_many_lines(
     sid: UUID,
     file_service: FileService.register_deps(),
@@ -107,7 +112,7 @@ async def generate_translation_for_many_lines(
     return all_translations
 
 
-@router.put(path="/update/{sid}")
+@router.put(path="/update/{sid}", dependencies=[Depends(get_current_active_user)])
 async def update_one_line(
     sid: UUID,
     change_line: ChangeLine,
@@ -130,7 +135,7 @@ async def update_one_line(
     return updated_line
 
 
-@router.delete(path="/delete/{sid}")
+@router.delete(path="/delete/{sid}", dependencies=[Depends(get_current_active_user)])
 async def delete_one_line(
     sid: UUID,
     line_service: LineService.register_deps(),
